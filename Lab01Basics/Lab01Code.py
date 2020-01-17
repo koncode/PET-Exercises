@@ -36,6 +36,9 @@ def encrypt_message(K, message):
     plaintext = message.encode("utf8")
     
     ## YOUR CODE HERE
+    aes = Cipher("aes-128-gcm")
+    iv = urandom(16)
+    ciphertext, tag = aes.quick_gcm_enc(K, iv, plaintext)
 
     return (iv, ciphertext, tag)
 
@@ -45,6 +48,8 @@ def decrypt_message(K, iv, ciphertext, tag):
         In case the decryption fails, throw an exception.
     """
     ## YOUR CODE HERE
+    aes = Cipher("aes-128-gcm")
+    plain = aes.quick_gcm_dec(K, iv, ciphertext, tag)
 
     return plain.encode("utf8")
 
