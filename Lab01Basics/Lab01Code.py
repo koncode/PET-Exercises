@@ -34,8 +34,11 @@ def encrypt_message(K, message):
     """ Encrypt a message under a key K """
 
     plaintext = message.encode("utf8")
-    
+
     ## YOUR CODE HERE
+    aes = Cipher("aes-128-gcm")
+    iv = urandom(16)
+    ciphertext, tag = aes.quick_gcm_enc(K, iv, plaintext)
 
     return (iv, ciphertext, tag)
 
@@ -45,6 +48,8 @@ def decrypt_message(K, iv, ciphertext, tag):
         In case the decryption fails, throw an exception.
     """
     ## YOUR CODE HERE
+    aes = Cipher("aes-128-gcm")
+    plain = aes.quick_gcm_dec(K, iv, ciphertext, tag)
 
     return plain.encode("utf8")
 
@@ -76,9 +81,9 @@ def is_point_on_curve(a, b, p, x, y):
     assert isinstance(b, Bn)
     assert isinstance(p, Bn) and p > 0
     assert (isinstance(x, Bn) and isinstance(y, Bn)) \
-           or (x == None and y == None)
+           or (x is None and y is None)
 
-    if x == None and y == None:
+    if x is None and y is None:
         return True
 
     lhs = (y * y) % p
@@ -102,8 +107,24 @@ def point_add(a, b, p, x0, y0, x1, y1):
 
     # ADD YOUR CODE BELOW
     xr, yr = None, None
-    
-    return (xr, yr)
+    if x0 is None and y0 is None:
+        return (x1, y1)
+    elif x1 is None and y1 is None:
+        return (x0, y0)
+    elif x1 is x0 and y0 is y1:
+        raise Exception("EC Points must not be equal")
+    else:
+        yp = y1
+        xp = x1
+        yq = y0
+        xq = x0
+        if xp is xq and yp.mod_mul(-1,p) == yq :
+            return None,None
+        else:
+            lam = ( (yq - yp) * ( (xq - xp).mod_inverse(p) ) ) % p
+        xr = (lam*lam - xp - xq ) % p
+        yr = ( lam * (xp - xr) - yp ) % p
+        return (xr, yr)
 
 def point_double(a, b, p, x, y):
     """Define "doubling" an EC point.
@@ -115,7 +136,7 @@ def point_double(a, b, p, x, y):
         yr  = lam * (xp - xr) - yp (mod p)
 
     Returns the point representing the double of the input (x, y).
-    """  
+    """
 
     # ADD YOUR CODE BELOW
     xr, yr = None, None
@@ -232,7 +253,7 @@ def dh_encrypt(pub, message, aliceSig = None):
         - Use the shared key to AES_GCM encrypt the message.
         - Optionally: sign the message with Alice's key.
     """
-    
+
     ## YOUR CODE HERE
     pass
 
@@ -240,7 +261,7 @@ def dh_decrypt(priv, ciphertext, aliceVer = None):
     """ Decrypt a received message encrypted using your public key, 
     of which the private key is provided. Optionally verify 
     the message came from Alice using her verification key."""
-    
+
     ## YOUR CODE HERE
     pass
 
