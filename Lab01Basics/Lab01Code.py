@@ -107,10 +107,12 @@ def point_add(a, b, p, x0, y0, x1, y1):
 
     # ADD YOUR CODE BELOW
     xr, yr = None, None
+    # if either point is None,None we return the other one
     if x0 is None and y0 is None:
         return (x1, y1)
     elif x1 is None and y1 is None:
         return (x0, y0)
+    # we cannot add the same 2 points so we raise an exception
     elif x1 is x0 and y0 is y1:
         raise Exception("EC Points must not be equal")
     else:
@@ -118,12 +120,15 @@ def point_add(a, b, p, x0, y0, x1, y1):
         xp = x1
         yq = y0
         xq = x0
+        # if Xs are equal but Yq = -Yp then we return infinity
         if xp is xq and yp.mod_mul(-1,p) == yq :
             return None,None
+        # Below is the normal situation
+        # and we add using the given formula
         else:
             lam = ( (yq - yp) * ( (xq - xp).mod_inverse(p) ) ) % p
-        xr = (lam*lam - xp - xq ) % p
-        yr = ( lam * (xp - xr) - yp ) % p
+        xr = (lam * lam - xp - xq) % p
+        yr = (lam * (xp - xr) - yp) % p
         return (xr, yr)
 
 def point_double(a, b, p, x, y):
@@ -141,7 +146,15 @@ def point_double(a, b, p, x, y):
     # ADD YOUR CODE BELOW
     xr, yr = None, None
 
-    return xr, yr
+    if x is None and y is None:
+        return None,None
+    if is_point_on_curve(a, b, p, x, y):
+        lam = (((x.mod_pow(2, p)).mod_mul(3, p)).mod_add(a, p)).mod_mul((y.mod_mul(2, p)).mod_inverse(p), p)
+        xr = (lam.mod_pow(2, p)).mod_sub(x.mod_mul(2, p), p)
+        yr = ((lam.mod_mul(x.mod_sub(xr, p), p)).mod_sub(y, p))
+        return xr, yr
+    else:
+        raise Exception("Point is not on the curve")
 
 def point_scalar_multiplication_double_and_add(a, b, p, x, y, scalar):
     """
@@ -161,8 +174,9 @@ def point_scalar_multiplication_double_and_add(a, b, p, x, y, scalar):
     P = (x, y)
 
     for i in range(scalar.num_bits()):
-        pass ## ADD YOUR CODE HERE
-
+        if scalar.is_bit_set(i) or scalar==1:
+            Q=point_add(a, b, p, Q[0], Q[1], P[0], P[1])
+        P=point_double(a, b, p, P[0], P[1])
     return Q
 
 def point_scalar_multiplication_montgomerry_ladder(a, b, p, x, y, scalar):
