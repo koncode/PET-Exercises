@@ -201,8 +201,12 @@ def point_scalar_multiplication_montgomerry_ladder(a, b, p, x, y, scalar):
     R1 = (x, y)
 
     for i in reversed(range(0,scalar.num_bits())):
-        pass ## ADD YOUR CODE HERE
-
+        if scalar.is_bit_set(i):
+            R0 = point_add(a, b, p, R0[0], R0[1], R1[0], R1[1])
+            R1 = point_double(a, b, p, R1[0], R1[1])
+        else:
+            R1 = point_add(a, b, p, R0[0], R0[1], R1[0], R1[1])
+            R0 = point_double(a, b, p, R0[0], R0[1])
     return R0
 
 
@@ -232,6 +236,8 @@ def ecdsa_sign(G, priv_sign, message):
     plaintext =  message.encode("utf8")
 
     ## YOUR CODE HERE
+    digest = sha256(plaintext).digest()
+    sig = do_ecdsa_sign(G, priv_sign, digest)
 
     return sig
 
@@ -240,6 +246,8 @@ def ecdsa_verify(G, pub_verify, message, sig):
     plaintext =  message.encode("utf8")
 
     ## YOUR CODE HERE
+    digest = sha256(plaintext).digest()
+    res = do_ecdsa_verify(G, pub_verify, sig, digest)
 
     return res
 
@@ -269,7 +277,26 @@ def dh_encrypt(pub, message, aliceSig = None):
     """
 
     ## YOUR CODE HERE
-    pass
+    # Bob's public key is a point on the curve
+    bob_pub = pub
+
+    G, alice_priv, alice_pub = dh_get_key()
+    # Alice's private key is a scalar
+    shared_key_point = bob_pub * alice_priv # this is multiplication of a point with a scalar
+
+    # We convert this shared_key point to a
+    # string binary representation with .export
+    #
+    # .export :
+    # "Returns a string binary representation
+    #  of the point in compressed coordinates"
+    shared_key_point_binary = shared_key_point.export()
+    # Then we hash the value to produce a 256 bit key
+    shared_key = sha256(shared_key_point_binary).digest()
+    iv, encrypted_text, tag = encrypt_message(shared_key, message)
+    ciphertext = alice_pub, (iv, encrypted_text, tag)
+    return ciphertext
+
 
 def dh_decrypt(priv, ciphertext, aliceVer = None):
     """ Decrypt a received message encrypted using your public key, 
@@ -277,7 +304,16 @@ def dh_decrypt(priv, ciphertext, aliceVer = None):
     the message came from Alice using her verification key."""
 
     ## YOUR CODE HERE
-    pass
+    # The ciphertext is 4 things combined
+    alice_pub, iv, encrypted_text, tag = ciphertext
+    bob_priv = priv
+    # derive the shared key the same way as before
+    shared_key_point = bob_priv * alice_pub # Now bob_priv is a scalar
+    shared_key_point_binary = shared_key_point.export()
+    shared_key = sha256(shared_key_point_binary).digest()
+
+    return decrypt_message(shared_key, iv, encrypted_text, tag)
+
 
 ## NOTE: populate those (or more) tests
 #  ensure they run using the "py.test filename" command.
