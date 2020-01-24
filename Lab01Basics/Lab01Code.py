@@ -282,8 +282,8 @@ def dh_encrypt(pub, message, aliceSig = None):
 
     G, alice_priv, alice_pub = dh_get_key()
     # Alice's private key is a scalar
-    shared_key_point = bob_pub * alice_priv # this is multiplication of a point with a scalar
-
+    #shared_key_point = bob_pub * alice_priv # this is multiplication of a point with a scalar
+    shared_key_point = bob_pub.pt_mul(alice_priv)
     # We convert this shared_key point to a
     # string binary representation with .export
     #
@@ -293,8 +293,14 @@ def dh_encrypt(pub, message, aliceSig = None):
     shared_key_point_binary = shared_key_point.export()
     # Then we hash the value to produce a 256 bit key
     shared_key = sha256(shared_key_point_binary).digest()
-    iv, encrypted_text, tag = encrypt_message(shared_key, message)
-    ciphertext = alice_pub, (iv, encrypted_text, tag)
+    plaintext = message.encode("utf8")
+
+    ## YOUR CODE HERE
+    aes = Cipher("aes-256-gcm")
+    iv = urandom(16)
+    encrypted_text, tag = aes.quick_gcm_enc(shared_key, iv, plaintext)
+    #iv, encrypted_text, tag = encrypt_message(shared_key, message)
+    ciphertext = alice_pub, iv, encrypted_text, tag
     return ciphertext
 
 
@@ -312,7 +318,11 @@ def dh_decrypt(priv, ciphertext, aliceVer = None):
     shared_key_point_binary = shared_key_point.export()
     shared_key = sha256(shared_key_point_binary).digest()
 
-    return decrypt_message(shared_key, iv, encrypted_text, tag)
+    aes = Cipher("aes-256-gcm")
+    plain = aes.quick_gcm_dec(shared_key, iv, encrypted_text, tag)
+
+    return plain.encode("utf8")
+
 
 
 ## NOTE: populate those (or more) tests
@@ -321,10 +331,20 @@ def dh_decrypt(priv, ciphertext, aliceVer = None):
 #  $ py.test-2.7 --cov-report html --cov Lab01Code Lab01Code.py 
 
 def test_encrypt():
+    test_mesage = "This is a test message"
+    G, bob_priv, bob_pub = dh_get_key()
+    alice_pub, iv, encrypted_text, tag = dh_encrypt(bob_pub, test_mesage, None)
     assert False
 
 def test_decrypt():
-    assert False
+    test_mesage = "This is a test message"
+    G, bob_priv, bob_pub = dh_get_key()
+    alice_pub, iv, encrypted_text, tag = dh_encrypt(bob_pub, test_mesage, None)
+
+    c = alice_pub, iv, encrypted_text, tag
+    
+    decrypted_messsage = dh_decrypt(bob_priv, c, None)
+    assert decrypted_messsage == test_mesage
 
 def test_fails():
     assert False
