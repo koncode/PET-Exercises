@@ -221,7 +221,6 @@ def mix_server_n_hop(private_key, message_list, final=False):
         h.update(msg.message)
 
         expected_mac = h.digest()
-        print "SERVER HMAC KEY" + str(hmac_key)
 
         if not secure_compare(msg.hmacs[0], expected_mac[:20]):
             raise Exception("HMAC check failure")
@@ -283,6 +282,10 @@ def mix_client_n_hop(public_keys, address, message):
 
     ## ADD CODE HERE
     key_materials = []
+    # First go through the list in the regular order
+    # in order to extract the key material.
+    # It can be done only in this direction because
+    # of the blinding factor
     for public_key in public_keys:
         # First get a shared key
         shared_element = private_key * public_key
@@ -295,8 +298,10 @@ def mix_client_n_hop(public_keys, address, message):
     address_cipher = address_plaintext
     message_cipher = message_plaintext
     hmacs = []
+    # Then we can go in the reverse direction
+    # to encapulate the message as many times as necessary
     for j, public_key in enumerate(reversed(public_keys)):
-        key_material = key_materials[j]
+        key_material = key_materials[j]  # this is already in reverse
         # Use different parts of the shared key for different operations
         hmac_key = key_material[:16]
         address_key = key_material[16:32]
@@ -373,8 +378,17 @@ def analyze_trace(trace, target_number_of_friends, target=0):
     """
 
     ## ADD CODE HERE
-
-    return []
+    # Get the list of friend statistics in a counter object
+    friends_statistics = Counter()
+    for senders, receivers in trace:
+        if target in senders:
+            for receiver in receivers:
+                friends_statistics[receiver] += 1
+    # construct the final list by getting the friends with most appearances
+    likely_friends = []
+    for friend, times in friends_statistics.most_common(target_number_of_friends):
+        likely_friends.append(friend)
+    return likely_friends
 
 ## TASK Q1 (Question 1): The mix packet format you worked on uses AES-CTR with an IV set to all zeros. 
 #                        Explain whether this is a security concern and justify your answer.
