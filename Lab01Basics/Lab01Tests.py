@@ -118,7 +118,7 @@ def test_on_curve():
 
     ## Example on how to define a curve
     from petlib.ec import EcGroup, EcPt
-    G = EcGroup(713) # NIST curve
+    G = EcGroup(713)  # NIST curve
     d = G.parameters()
     a, b, p = d["a"], d["b"], d["p"]
     g = G.generator()
