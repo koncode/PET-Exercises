@@ -256,7 +256,7 @@ def prove_x0eq10x1plus20(params, C, x0, x1, r):
     c_xr = w_r * g
     c_x1 = w_1 * h1
     c_x0 = 10 * w_1 * h0
-    W = (c_xr + c_x1 + c_x0)  # + 20 * h0
+    W = c_xr + c_x1 + c_x0
 
     c = to_challenge([g, h1, h2, W, C])
 
