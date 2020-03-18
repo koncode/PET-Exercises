@@ -273,7 +273,7 @@ def verify_x0eq10x1plus20(params, C, proof):
     ## YOUR CODE HERE:
     c, r_1, r_r = proof
 
-    c_xr = r_r * g  # = w_r * g - (c * xr * g)
+    c_xr = r_r * g  # = w_r * g - (c * r * g)
     c_x1 = r_1 * h1  # = w_r1 * h1 - (c * x1 * h1)
     c_x0 = 10 * r_1 * h0  # = w_1 * 10 * h0 - (c * x1 * 10 * h0)
     W = (c_xr + c_x1 + c_x0) + c * (C - 20 * h0)
